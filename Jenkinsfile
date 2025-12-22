@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:20'  // Use Node.js 20 image
+            args '-u root'   // run as root inside container
+        }
+    }
 
     environment {
         BACKEND_DIR = 'backend'
