@@ -1,37 +1,26 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:20'  // Use Node.js 20 image
-            args '-u root'   // run as root inside container
-        }
-    }
-
-    environment {
-        BACKEND_DIR = 'backend'
-        DOCKER_IMAGE = 'devops-backend'
-    }
+    agent any
 
     stages {
+
         stage('Checkout') {
             steps {
-                echo "Pulling latest code from GitHub..."
-                git branch: 'main', url: 'https://github.com/MariamTariq/devops-portfolio.git'
+                echo 'Pulling latest code from GitHub...'
+                checkout scm
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install Backend Dependencies') {
             steps {
-                echo "Installing Node.js dependencies..."
-                dir("${BACKEND_DIR}") {
+                dir('backend') {
                     sh 'npm install'
                 }
             }
         }
 
-        stage('Run Tests') {
+        stage('Run Backend Tests') {
             steps {
-                echo "Running backend tests..."
-                dir("${BACKEND_DIR}") {
+                dir('backend') {
                     sh 'npm test'
                 }
             }
@@ -39,25 +28,29 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                echo "Building Docker image..."
-                sh "docker build -t ${DOCKER_IMAGE} ./backend"
+                dir('backend') {
+                    sh 'docker build -t devops-backend .'
+                }
             }
         }
 
-        stage('Optional: Run Docker Container') {
+        stage('Run Docker Container') {
             steps {
-                echo "Running Docker container for backend..."
-                sh "docker run -d -p 3000:3000 --name ${DOCKER_IMAGE}-container ${DOCKER_IMAGE}"
+                sh '''
+                docker stop devops-backend-container || true
+                docker rm devops-backend-container || true
+                docker run -d -p 3000:3000 --name devops-backend-container devops-backend
+                '''
             }
         }
     }
 
     post {
         success {
-            echo "Pipeline completed successfully ✅"
+            echo 'Pipeline completed successfully 🎉'
         }
         failure {
-            echo "Pipeline failed ❌"
+            echo 'Pipeline failed ❌'
         }
     }
 }
