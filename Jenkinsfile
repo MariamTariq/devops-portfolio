@@ -1,15 +1,9 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'node20'
-    }
-
     stages {
-
         stage('Checkout') {
             steps {
-                echo 'Pulling latest code from GitHub...'
                 checkout scm
             }
         }
@@ -37,21 +31,11 @@ pipeline {
                 }
             }
         }
-
-        stage('Run Docker Container') {
-            steps {
-                sh '''
-                docker stop devops-backend-container || true
-                docker rm devops-backend-container || true
-                docker run -d -p 3000:3000 --name devops-backend-container devops-backend
-                '''
-            }
-        }
     }
 
     post {
         success {
-            echo 'Pipeline completed successfully 🎉'
+            echo 'Pipeline succeeded ✅'
         }
         failure {
             echo 'Pipeline failed ❌'
