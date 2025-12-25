@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -9,6 +10,12 @@ pipeline {
         }
 
         stage('Install Backend Dependencies') {
+            agent {
+                docker {
+                    image 'node:20'
+                    args '-u root'
+                }
+            }
             steps {
                 dir('backend') {
                     sh 'npm install'
@@ -17,6 +24,12 @@ pipeline {
         }
 
         stage('Run Backend Tests') {
+            agent {
+                docker {
+                    image 'node:20'
+                    args '-u root'
+                }
+            }
             steps {
                 dir('backend') {
                     sh 'npm test'
@@ -24,21 +37,14 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                dir('backend') {
-                    sh 'docker build -t devops-backend .'
-                }
-            }
-        }
     }
 
     post {
-        success {
-            echo 'Pipeline succeeded ✅'
-        }
         failure {
             echo 'Pipeline failed ❌'
+        }
+        success {
+            echo 'Pipeline succeeded ✅'
         }
     }
 }
